@@ -26,6 +26,10 @@ const menu = document.querySelector('#menu-items');
 let selected = 0;
 let audioContext;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const compactLayout = window.matchMedia('(max-width: 900px)');
+const menuToggle = document.querySelector('#menu-toggle');
+const mobileMenu = document.querySelector('#mobile-menu');
+let mobileMenuOpen = false;
 let preferences = { sound: false, motion: !reducedMotion.matches, texture: true };
 try { preferences = { ...preferences, ...JSON.parse(localStorage.getItem('dodds-preferences') || '{}') }; } catch { /* Storage is optional. */ }
 
@@ -58,6 +62,53 @@ const buttons = destinations.map((destination, i) => {
   menu.append(button);
   return button;
 });
+
+const mobileLinks = destinations.map((destination, i) => {
+  const link = document.createElement('a');
+  link.href = `#${destination.id}`;
+  link.className = 'mobile-menu-link';
+  link.style.setProperty('--item-index', i);
+  link.innerHTML = `<span class="mobile-menu-index" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span><span>${destination.label}</span><span class="mobile-menu-arrow" aria-hidden="true">↗</span>`;
+  link.addEventListener('click', event => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    select(i, true);
+  });
+  document.querySelector('#mobile-menu-items').append(link);
+  return link;
+});
+
+function setMobileMenu(open, restoreFocus = false) {
+  mobileMenuOpen = open && compactLayout.matches;
+  mobileMenu.hidden = !mobileMenuOpen;
+  menuToggle.setAttribute('aria-expanded', String(mobileMenuOpen));
+  menuToggle.setAttribute('aria-label', mobileMenuOpen ? 'Close menu' : 'Open menu');
+  if (mobileMenuOpen) window.scrollTo({ top: 0, behavior: 'auto' });
+  if (restoreFocus) menuToggle.focus({ preventScroll: true });
+}
+
+menuToggle.addEventListener('click', () => setMobileMenu(!mobileMenuOpen));
+mobileMenu.addEventListener('keydown', event => {
+  const index = mobileLinks.indexOf(document.activeElement);
+  if (index < 0) return;
+  let next;
+  if (event.key === 'ArrowDown') next = (index + 1) % mobileLinks.length;
+  if (event.key === 'ArrowUp') next = (index + mobileLinks.length - 1) % mobileLinks.length;
+  if (event.key === 'Home') next = 0;
+  if (event.key === 'End') next = mobileLinks.length - 1;
+  if (next !== undefined) { event.preventDefault(); mobileLinks[next].focus(); }
+});
+
+function syncLayout() {
+  const focus = document.activeElement;
+  const wasInMobileMenu = mobileMenu.contains(focus) || focus === menuToggle;
+  setMobileMenu(false);
+  if (!compactLayout.matches && wasInMobileMenu) buttons[selected].focus({ preventScroll: true });
+  if (compactLayout.matches && menu.contains(focus)) menuToggle.focus({ preventScroll: true });
+}
+// Older Safari exposes MediaQueryList.addListener instead of addEventListener.
+if (compactLayout.addEventListener) compactLayout.addEventListener('change', syncLayout);
+else compactLayout.addListener(syncLayout);
 
 const content = {
   identity: `<span class="detail-label">01 / THE DESIGN LANGUAGE</span><p class="detail-copy">Sculptural type. Cool metal. Deep blue.<br>A world built from oversized letters, bold crops and a little retro futurism. One voice throughout: Syne ExtraBold 800.</p><span class="detail-label">02 / THE PALETTE</span><div class="palette"><div class="swatch" style="background:#071426"><span>#071426</span></div><div class="swatch" style="background:#255cff"><span>#255CFF</span></div><div class="swatch" style="background:#bfe9ff"><span>#BFE9FF</span></div><div class="swatch" style="background:#c6cfda"><span>#C6CFDA</span></div><div class="swatch" style="background:#f5f8fc"><span>#F5F8FC</span></div></div>`,
@@ -112,6 +163,10 @@ function select(index, userInitiated = false) {
     button.querySelector('.panel-edge').setAttribute('d', `M${row.left + 2} ${row.y + 3}H${row.right - 4 + (active ? 50 : 0)}`);
     button.querySelector('.menu-label').setAttribute('x', row.nextRight - 17 + (active ? 20 : 0));
   });
+  mobileLinks.forEach((link, i) => {
+    if (i === selected) link.setAttribute('aria-current', 'page');
+    else link.removeAttribute('aria-current');
+  });
   document.querySelector('#dial-number').textContent = String(selected + 1).padStart(2, '0');
   document.querySelector('#scene-index').textContent = `${String(selected + 1).padStart(2, '0')} / 08`;
   document.querySelector('#scene-title').textContent = destination.title;
@@ -126,6 +181,12 @@ function select(index, userInitiated = false) {
   }
   applyPreferences();
   wireContent();
+  const focusWasInMenu = mobileMenu.contains(document.activeElement);
+  setMobileMenu(false);
+  if (compactLayout.matches && (userInitiated || focusWasInMenu)) {
+    document.querySelector('#scene-title').focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
 }
 
 function wireContent() {
@@ -158,6 +219,11 @@ document.querySelector('.sound-toggle').addEventListener('click', () => {
 document.querySelector('#reset-button').addEventListener('click', () => select(0, true));
 document.querySelector('.brand-link').addEventListener('click', event => { event.preventDefault(); select(0, true); });
 document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && mobileMenuOpen) {
+    event.preventDefault(); setMobileMenu(false, true); return;
+  }
+  // Mobile uses native link/tab navigation; do not focus the hidden SVG menu.
+  if (compactLayout.matches) return;
   if (event.target.matches('input,textarea,select') || event.metaKey || event.ctrlKey || event.altKey) return;
   if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
     event.preventDefault(); select(selected + (event.key === 'ArrowDown' ? 1 : -1), true); buttons[selected].focus({ preventScroll: true });
