@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#071426">
   <meta name="description" content="OFFICAL DODDS. The future, remembered. Enter a world of sculptural type, cool metal and deep blue.">
   <title>OFFICAL DODDS — The future, remembered.</title>
@@ -13,10 +13,18 @@
 </head>
 <body>
   <header class="system-bar">
-    <a href="#start" class="brand-link" aria-label="OFFICAL DODDS home">OFFICAL DODDS<span class="registered">®</span></a>
+    <a href="#start" class="brand-link" aria-label="OFFICAL DODDS home">OFFICAL DODDS</a>
     <span class="system-label">THE FUTURE, REMEMBERED.</span>
     <button class="sound-toggle" type="button" aria-pressed="false"><span class="status-dot"></span>SOUND <span id="sound-status">OFF</span></button>
+    <button class="menu-toggle" id="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+      <span class="pill-stack" aria-hidden="true"><span></span><span></span><span></span></span>
+    </button>
   </header>
+
+  <nav class="mobile-menu" id="mobile-menu" aria-label="Main menu" hidden>
+    <div class="mobile-menu-heading"><span>SELECT A DESTINATION</span><span>OD / 001</span></div>
+    <div class="mobile-menu-items" id="mobile-menu-items"></div>
+  </nav>
 
   <main class="console" id="console">
     <div class="world" aria-hidden="true">
@@ -90,7 +98,7 @@
     <section class="scene" aria-labelledby="scene-title">
       <div class="scene-topline"><span id="scene-index">01 / 08</span><span>OFFICAL DODDS WORLD</span></div>
       <div class="scene-heading" id="scene-heading">
-        <h1 id="scene-title">START</h1>
+        <h1 id="scene-title" tabindex="-1">START</h1>
         <p id="scene-description">The future, remembered.<br>A new transmission from OFFICAL DODDS.</p>
       </div>
       <div class="scene-content" id="scene-content"></div>
@@ -106,7 +114,7 @@
 
   <footer class="control-bar">
     <span class="control-help"><span class="key">↑</span><span class="key">↓</span> SELECT <span class="control-divider"></span><span class="key enter-key">ENTER</span> OPEN</span>
-    <span class="mobile-help">TAP A DESTINATION TO EXPLORE</span>
+    <span class="mobile-help">OPEN THE MENU TO EXPLORE</span>
     <span class="footer-center"><span class="live-dot"></span><span id="footer-status">AWAITING YOUR NEXT MOVE</span></span>
     <button type="button" id="reset-button">RESET <span class="key">ESC</span></button>
   </footer>

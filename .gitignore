@@ -3,3 +3,6 @@ node_modules/
 .openai/*.local.json
 artifacts/
 *.tar.gz
+test-results/
+playwright-report/
+.openai/
