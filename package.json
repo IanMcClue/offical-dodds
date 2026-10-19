@@ -1,0 +1,11 @@
+{
+  "name": "offical-dodds",
+  "private": true,
+  "version": "1.0.0",
+  "description": "OFFICAL DODDS — The future, remembered.",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "check": "node --check dist/app.js && node --check server.mjs"
+  }
+}
