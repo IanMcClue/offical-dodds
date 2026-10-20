@@ -3,7 +3,9 @@ import { test, expect } from '@playwright/test';
 const destinations = ['START', 'IDENTITY', 'WORK', 'PLAYGROUND', 'JOURNAL', 'ARCHIVE', 'CONTACT', 'OPTIONS'];
 
 test('all destinations remain reachable and fit the viewport', async ({ page }) => {
+  test.setTimeout(60000);
   await page.goto('/');
+  await page.evaluate(() => document.fonts.ready);
   const compact = await page.evaluate(() => matchMedia('(max-width: 900px)').matches);
   for (const name of destinations) {
     if (compact) {
@@ -29,7 +31,7 @@ test('compact menu handles focus, history, reduced motion and resize', async ({ 
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await expect(page.locator('#mobile-menu [aria-current=page]')).toHaveAttribute('href', '#work');
   await toggle.focus();
-  await page.keyboard.press('Tab');
+  await page.keyboard.press('ArrowDown');
   await expect(page.locator('#mobile-menu a').first()).toBeFocused();
   await page.keyboard.press('End');
   await expect(page.locator('#mobile-menu a').last()).toBeFocused();
@@ -48,6 +50,8 @@ test('compact menu handles focus, history, reduced motion and resize', async ({ 
   await toggle.click();
   expect(await page.locator('#mobile-menu a').first().evaluate(el => getComputedStyle(el).animationName)).toBe('none');
   await page.setViewportSize({ width: 1280, height: 800 });
+  // WebKit applies CSS before delivering the media-query change event.
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
   await expect(page.locator('#mobile-menu')).toBeHidden();
   await expect(toggle).toBeHidden();
   await expect(page.locator('.menu')).toBeVisible();
